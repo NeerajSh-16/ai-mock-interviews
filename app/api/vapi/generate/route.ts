@@ -4,6 +4,10 @@ import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 
+export async function GET(){
+    return Response.json({success: true, data: "THANK YOU!"}, {status:200})
+}
+
 export async function POST(request: Request) {
   const { type, role, level, techstack, amount, userId } = await request.json();
 
