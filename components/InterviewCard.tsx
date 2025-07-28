@@ -6,7 +6,13 @@ import { getRandomInterviewCover } from '@/lib/utils'
 import { Button } from './ui/button'
 import DisplayTechIcons from './DisplayTechIcons'
 
-const InterviewCard = ({interviewId, userID, role, type, techstack, createdAt} : InterviewProps) => {4
+const InterviewCard = ({
+    interviewId, 
+    userID, 
+    role, 
+    type, 
+    techstack, 
+    createdAt} : InterviewProps) => {
     const feedback = null as Feedback | null
     const normalizedType = /mix/gi.test(type) ? 'Mixed' : type
     const fromattedDate = dayjs(feedback?.createdAt || createdAt || Date.now()).format('MMM D, YYYY')
