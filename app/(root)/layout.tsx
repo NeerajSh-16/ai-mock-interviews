@@ -1,31 +1,13 @@
-"use client"; // Required for useEffect and hooks
+import Link from "next/link";
+import Image from "next/image";
+import { ReactNode } from "react";
+import { redirect } from "next/navigation";
 
-import Link from 'next/link'
-import Image from 'next/image'
-import React, { ReactNode, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from '@/firebase/client'
+import { isAuthenticated } from "@/lib/actions/auth.action";
 
-const RootLayout = ({ children }: { children: ReactNode }) => {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.replace("/sign-in") // redirect to sign-in if not logged in
-      } else {
-        setLoading(false)
-      }
-    })
-
-    return () => unsubscribe()
-  }, [router])
-
-  if (loading) {
-    return <div className="text-center p-10">Loading...</div>
-  }
+const Layout = async ({ children }: { children: ReactNode }) => {
+  const isUserAuthenticated = await isAuthenticated();
+  if (!isUserAuthenticated) redirect("/sign-in");
 
   return (
     <div className="root-layout">
@@ -38,7 +20,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
 
       {children}
     </div>
-  )
-}
+  );
+};
 
-export default RootLayout
+export default Layout;
