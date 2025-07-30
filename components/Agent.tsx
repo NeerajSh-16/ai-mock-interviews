@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 
 enum CallStatus {
-  INACTIVE = "INACTIVE", 
+  INACTIVE = "INACTIVE",
   CONNECTING = "CONNECTING",
   ACTIVE = "ACTIVE",
   FINISHED = "FINISHED",
@@ -19,11 +19,17 @@ interface SavedMessage {
   content: string;
 }
 
-const Agent = ({
-  userName,
-  userId,
-  type,
-}: AgentProps) => {
+// Update your AgentProps interface to include all necessary props if you have them,
+// or keep only what you need here based on your calling code.
+
+interface AgentProps {
+  userName: string;
+  userId: string;
+  type: string;
+  // Note: Since user provides level, amount, techstack, role verbally, these are NOT props here.
+}
+
+const Agent = ({ userName, userId, type }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
@@ -34,18 +40,55 @@ const Agent = ({
     if (messages.length > 0) {
       setLastMessage(messages[messages.length - 1].content);
     }
-  })
+  }, [messages]);
 
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
     };
 
-    const onCallEnd = () => {
+    // Updated onCallEnd to extract variables and send to API
+    const onCallEnd = async (callData: any) => {
       setCallStatus(CallStatus.FINISHED);
+
+      try {
+        // Extract variables collected by agent during the call
+        const variables = callData?.variables || {};
+
+        const { level, role, techstack, type: callType, amount, userid } = variables;
+
+        // Fallback userid to prop if not provided by workflow
+        const userIdToSend = userid ?? userId;
+
+        // Log variables for debugging
+        console.log("Collected variables on call end:", variables);
+        
+        // Send collected data to backend API to create interview entry
+        const response = await fetch("/api/interviews", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            level,
+            role,
+            techstack,
+            type: callType || type, // prefer workflow provided type or fallback to prop
+            amount,
+            userid: userIdToSend,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Failed to save interview data:", errorText);
+        }
+      } catch (error) {
+        console.error("Error sending interview data after call ends:", error);
+      }
     };
 
-    const onMessage = (message: Message) => {
+    const onMessage = (message: any) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { role: message.role, content: message.transcript };
         setMessages((prev) => [...prev, newMessage]);
@@ -53,19 +96,18 @@ const Agent = ({
     };
 
     const onSpeechStart = () => {
-      console.log("speech start");
       setIsSpeaking(true);
     };
 
     const onSpeechEnd = () => {
-      console.log("speech end");
       setIsSpeaking(false);
     };
 
     const onError = (error: Error) => {
-      console.log("Error:", error);
+      console.error("Vapi Error:", error);
     };
 
+    // Register event handlers
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
@@ -74,6 +116,7 @@ const Agent = ({
     vapi.on("error", onError);
 
     return () => {
+      // Clean up event handlers
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);
@@ -81,21 +124,26 @@ const Agent = ({
       vapi.off("speech-end", onSpeechEnd);
       vapi.off("error", onError);
     };
-  }, []);
+  }, [type, userId]);
 
   useEffect(() => {
-    if(callStatus === CallStatus.FINISHED) router.push('/')
-  },[messages, callStatus, type, userId])
+    // Redirect home when call finishes
+    if (callStatus === CallStatus.FINISHED) {
+      router.push("/");
+    }
+  }, [callStatus, router]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
+    // Start call with workflow ID and known variables only - user provides level, amount, etc. verbally
     await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
       variableValues: {
         username: userName,
         userid: userId,
+        type, // If type is known upfront and relevant
       },
-    })
+    });
   };
 
   const handleDisconnect = () => {
@@ -103,8 +151,8 @@ const Agent = ({
     vapi.stop();
   };
 
-  const latestMessage = messages[messages.length-1]?.content
-  const isCallInactiveOrFinished = callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED
+  const isCallInactiveOrFinished =
+    callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
   return (
     <>
@@ -156,15 +204,14 @@ const Agent = ({
       )}
 
       <div className="w-full flex justify-center">
-        {callStatus !== "ACTIVE" ? (
+        {callStatus !== CallStatus.ACTIVE ? (
           <button className="relative btn-call" onClick={() => handleCall()}>
             <span
               className={cn(
                 "absolute animate-ping rounded-full opacity-75",
-                callStatus !== "CONNECTING" && "hidden"
+                callStatus !== CallStatus.CONNECTING && "hidden"
               )}
             />
-
             <span className="relative">
               {isCallInactiveOrFinished ? "Call" : ". . ."}
             </span>
