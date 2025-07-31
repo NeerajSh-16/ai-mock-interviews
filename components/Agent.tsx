@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 
+
+
 enum CallStatus {
   INACTIVE = "INACTIVE",
   CONNECTING = "CONNECTING",
@@ -145,6 +147,7 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
         type, // If type is known upfront and relevant
       },
     });
+    console.log("User ID :", userId)
   };
 
   const handleDisconnect = () => {
