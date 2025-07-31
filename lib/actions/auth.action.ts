@@ -130,3 +130,4 @@ export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user; // to turn an existing user/non-user into a boolean value
 }
+

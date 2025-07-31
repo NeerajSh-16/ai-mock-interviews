@@ -51,41 +51,42 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
     const onCallEnd = async (callData: any) => {
       setCallStatus(CallStatus.FINISHED);
 
-      try {
-        // Extract variables collected by agent during the call
-        const variables = callData?.variables || {};
+      //sending data to backend is done in route.ts
+      // try {
+      //   // Extract variables collected by agent during the call
+      //   const variables = callData?.variables || {};
 
-        const { level, role, techstack, type: callType, amount, userid } = variables;
+      //   const { level, role, techstack, type: callType, amount, userid } = variables;
 
-        // Fallback userid to prop if not provided by workflow
-        const userIdToSend = userid ?? userId;
+      //   // Fallback userid to prop if not provided by workflow
+      //   const userIdToSend = userid ?? userId;
 
-        // Log variables for debugging
-        console.log("Collected variables on call end:", variables);
+      //   // Log variables for debugging
+      //   console.log("Collected variables on call end:", variables);
         
-        // Send collected data to backend API to create interview entry
-        const response = await fetch("/api/interviews", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            level,
-            role,
-            techstack,
-            type: callType || type, // prefer workflow provided type or fallback to prop
-            amount,
-            userid: userIdToSend,
-          }),
-        });
+      //   // Send collected data to backend API to create interview entry
+      //   const response = await fetch("/api/interviews", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       level,
+      //       role,
+      //       techstack,
+      //       type: callType || type, // prefer workflow provided type or fallback to prop
+      //       amount,
+      //       userid: userIdToSend,
+      //     }),
+      //   });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Failed to save interview data:", errorText);
-        }
-      } catch (error) {
-        console.error("Error sending interview data after call ends:", error);
-      }
+      //   if (!response.ok) {
+      //     const errorText = await response.text();
+      //     console.error("Failed to save interview data:", errorText);
+      //   }
+      // } catch (error) {
+      //   console.error("Error sending interview data after call ends:", error);
+      // }
     };
 
     const onMessage = (message: any) => {
