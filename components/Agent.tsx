@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
+//import { auth } from "@/firebase/client";
 
 
 
@@ -71,6 +72,7 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
       //     method: "POST",
       //     headers: {
       //       "Content-Type": "application/json",
+      //       "Authorization": `Bearer ${await auth.currentUser?.getIdToken()}`
       //     },
       //     body: JSON.stringify({
       //       level,
@@ -86,6 +88,7 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
       //     const errorText = await response.text();
       //     console.error("Failed to save interview data:", errorText);
       //   }
+      //   console.log("Data saved SUCCESSFULLY !!")
       // } catch (error) {
       //   console.error("Error sending interview data after call ends:", error);
       // }
