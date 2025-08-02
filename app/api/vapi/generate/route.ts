@@ -3,8 +3,11 @@ import { google } from "@ai-sdk/google";
 
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/actions/auth.action";
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+
   const { type, role, level, techstack, amount, userid } = await request.json();
 
   try {
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
       level: level,
       techstack: techstack.split(","),
       questions: JSON.parse(questions),
-      userId: userid,
+      userId: user.id,
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
@@ -46,6 +49,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
-  return Response.json({ success: true, data: "Thank you!" }, { status: 200 });
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");  // Get userId from query
+
+  // Use userId as needed, or call getCurrentUser() if you want to verify session instead
+  return Response.json({ success: true, userId }, { status: 200 });
 }

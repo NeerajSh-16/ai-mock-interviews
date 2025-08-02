@@ -11,7 +11,7 @@ const Page = async () => {
 
       <Agent
         userName={user?.name!}
-        userId={user?.id}
+        userId={user?.id!}
         type="generate"
       />
     </>
